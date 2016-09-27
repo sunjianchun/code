@@ -1,0 +1,21 @@
+---
+- name: Gengrate elasticsearch optimize script
+  template: >-
+    src=elasticsearch_optimize.sh.j2
+    dest={{ elasticsearch_path }}/{{ elasticsearch_cluster }}_optimize.sh
+    owner={{ deploy_user }}
+    group={{ deploy_user }}
+    mode=0755
+
+- name: Generate elasticsearch cron job
+  template: >-
+    src=elasticsearch.cron.j2
+    dest={{ cron_service_conf_dir }}/{{ elasticsearch_cluster }}
+    owner=root
+    group=root
+    mode=0644
+  no_log: yes
+  changed_when: yes
+  notify: 
+    - reload crond
+...

@@ -1,0 +1,34 @@
+---
+elasticsearch_ver: 2.3.2
+elasticsearch_url_path: sources/elasticsearch-{{ elasticsearch_ver }}.tar.gz
+elasticsearch_prefix: /usr/local
+elasticsearch_path: '{{ elasticsearch_prefix }}/elasticsearch-{{ elasticsearch_ver }}'
+elasticsearch_cluster: elasticsearch
+elasticsearch_node: '{{ inventory_hostname }}'
+elasticsearch_master_node: yes
+elasticsearch_data_node: yes
+elasticsearch_index_shards: 5
+elasticsearch_index_replicas: 1
+elasticsearch_data_path: /var/lib/elasticsearch
+elasticsearch_log_path: '{{ log_root }}/elasticsearch'
+elasticsearch_plugins_path: '{{ elasticsearch_path }}/plugins'
+elasticsearch_scripts_path: '{{ elasticsearch_path }}/scripts'
+elasticsearch_index_refresh_interval: 5s
+elasticsearch_bind_host: 0.0.0.0
+elasticsearch_publish_host: 0.0.0.0
+elasticsearch_zen_min_master_nodes: 2
+elasticsearch_discovery_zen_ping_multicast_enabled: no
+elasticsearch_discovery_zen_ping_unicast_hosts: []
+elasticsearch_repo_path: []
+elasticsearch_task_server: ''
+elasticsearch_vip: http://10.110.120.247:9200
+elasticsearch_write_alias: write_logs
+elasticsearch_read_alias: read_logs
+elasticsearch_keep_index_num: 3
+elasticsearch_cron_jobs:
+  - minute: 01
+    hour: 2
+    day: 1
+    month: '*'
+    weekday: '*'
+    cmd: '/bin/bash {{ elasticsearch_path }}/{{ elasticsearch_cluster }}_optimize.sh'

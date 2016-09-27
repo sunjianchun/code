@@ -1,0 +1,5 @@
+---
+dependencies:
+  - { role: common }
+  - { role: lang.java }
+  - { role: lang.py, when: inventory_hostname == elasticsearch_task_server }

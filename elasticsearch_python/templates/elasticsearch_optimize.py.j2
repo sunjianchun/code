@@ -1,0 +1,164 @@
+#!/usr/bin/python
+import urllib2
+import time,datetime
+import json
+import sys,os,pexpect
+import paramiko
+
+ES_VIP = "{{ elasticsearch_vip }}"
+write_alias = "{{ elasticsearch_write_alias }}"
+read_alias = "{{ elasticsearch_read_alias }}"
+
+def judge(func):
+    def wrapper(*args,**kw):
+        if func(*args,**kw) == 0:
+            print func.__name__ + " execute ok"
+        else:
+            print func.__name__ + " execute error"
+            os._exit(1)
+    return wrapper
+
+def Http_API(url,method,data = {}):
+    try:
+        if data == {}:
+            request = urllib2.Request(url)
+        else:
+            request = urllib2.Request(url,data=json.dumps(data))
+        request.get_method = lambda: '%s' %(method)
+        response = urllib2.urlopen(request)
+        if response.code == 200:
+#            print "OK: Function:<Http_API> arguements: url:%s method: %s data:%s" %(url,method,data)
+            return 0
+        else:
+            return response.code
+    except  Exception, e:
+#        print "ERROR: Function:<Http_API> arguements: url:%s method: %s data:%s\nmsg: %s" %(url,method,data,e)
+        return 1
+
+def get_index(month,t_format="%Y%m%d%H%M"):
+    current_time = datetime.datetime.now()
+    if current_time.month < month:
+        current_time.year = current_time.year - 1
+        current_time.month = month + 12
+
+    if current_time.minute < month:
+        current_time.hour = current_time.hour - 1
+        current_time.minute = month + 60
+    #temp_time = datetime.datetime(current_time.year,current_time.month - month,current_time.day,current_time.hour,current_time.minute).strftime(t_format)
+    temp_time = datetime.datetime(current_time.year,current_time.month,current_time.day,current_time.hour,current_time.minute - month).strftime(t_format)
+    index = "logs%s" %temp_time
+    url = "%s/%s/" %(ES_VIP,index)
+    if month == 1 and Http_API(url,"GET") !=200:
+        index = "logs"
+    elif month != 0 and month != 1 and Http_API(url,"GET") !=200:
+        index = None
+    return index
+
+@judge
+def create_index(name):
+    url = "%s/%s/" %(ES_VIP,name)
+    return Http_API(url,"PUT")
+
+@judge
+def operate_index(name,status,num = {{ elasticsearch_index_replicas }}):
+    if name == None:
+        return 0
+    else:
+        url = "%s/%s/%s" %(ES_VIP,name,status)
+        if status == "_open" or status == "_close":
+            return Http_API(url,"POST")
+    
+        elif status == "_settings":    
+            data = {
+                "number_of_replicas" : num
+            }
+            return Http_API(url,"PUT",data)
+    
+        elif status == "_delete":
+            url = "%s/%s/" %(ES_VIP,name)
+            return Http_API(url,"DELETE")
+@judge
+def operate_alias(name,add_index,remove_index):
+    url = "%s/%s" %(ES_VIP,name)
+    if Http_API(url,"GET") != 0:
+        url = "%s/%s/_alias/%s" %(ES_VIP,remove_index,name)
+        Http_API(url,"PUT")
+    
+    url = "%s/_aliases" %(ES_VIP)
+    if remove_index is not None:
+        data = {
+              "actions": [
+                  { "remove": { "index": remove_index, "alias": name } },
+                  { "add": { "index": add_index, "alias": name } }
+               ]
+            }
+    else:
+        data = {
+              "actions": [
+                  { "add": { "index": add_index, "alias": name } }
+               ]
+            }
+    return Http_API(url,"POST",data)
+
+@judge
+def compression_index(name):
+    url = "%s/%s/_settings?wait_for_finish=true" %(ES_VIP,name)
+    data = {
+        "index": {
+            "codec": "best_compression"
+        }
+    }
+    return Http_API(url,"PUT",data)
+
+@judge
+def optimize_index(name):
+    url = "%s/%s/_optimize?max_num_segements=1" %(ES_VIP,name)
+    return Http_API(url,"POST")
+
+@judge
+def move_index():
+    grouplist = []
+    {% for host in groups[elasticsearch_group_name] %}
+
+    hostdict = {}
+    hostdict['address'] = "{{ hostvars[host]['app_address']}}"
+    hostdict['user'] = "{{ hostvars[host]['ansible_ssh_user']}}"
+    hostdict['password'] = "{{ hostvars[host]['ansible_ssh_pass']}}"
+    grouplist.append(hostdict)
+    {% endfor %}
+
+    cmd_list = ['mv {{ elasticsearch_data_path }}/{{ elasticsearch_cluster }}/nodes/0/indices/%s {{ elasticsearch_link_path }}/indices/' %(get_index(1)),'ln -s {{ elasticsearch_link_path }}/indices/%s {{ elasticsearch_data_path }}/{{ elasticsearch_cluster }}/nodes/0/indices/' %(get_index(1))]
+
+    for i in range(len(grouplist)):
+        ssh = paramiko.SSHClient()
+        try:
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(grouplist[i]['address'],22,grouplist[i]['user'],grouplist[i]['password'],timeout=5)
+        except Exception,e:
+            print e;
+            return 1
+
+        for cmd in cmd_list:
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+            err = stderr.read().strip()
+            if err != '':
+                print "ERROR: IP %s peform %s error,msg:%s" %(grouplist[i]['address'],cmd,err)
+                ssh.close()
+                return 1
+        ssh.close()
+
+ 
+if __name__ == '__main__':
+    create_index(get_index(0))
+    operate_alias(write_alias,get_index(0),get_index(1))
+
+    operate_index(get_index(1),"_close") 
+    move_index()
+    compression_index(get_index(1))
+    operate_index(get_index(1),"_open")
+    operate_index(get_index(1),"_settings",0)
+    optimize_index(get_index(1))
+    operate_index(get_index(1),"_settings")
+    operate_alias(read_alias,get_index(1),get_index(6))
+
+    operate_index(get_index(1),"_delete")

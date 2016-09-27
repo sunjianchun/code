@@ -1,0 +1,58 @@
+---
+- name: Make elasticsearch path
+  file: >-
+    path={{ item }}
+    state=directory
+    owner={{ deploy_user }}
+    group={{ deploy_user }}
+    mode=0755
+  with_items:
+    - '{{ elasticsearch_data_path }}'
+    - '{{ elasticsearch_log_path }}'
+    - '{{ elasticsearch_plugins_path }}'
+    - '{{ elasticsearch_scripts_path }}'
+
+- name: Make elasticsearch repo path
+  file: >-
+    path={{ item }}
+    state=directory
+    owner={{ deploy_user }}
+    group={{ deploy_user }}
+    mode=0755
+  with_items: '{{ elasticsearch_repo_path }}'
+  when: '{{ elasticsearch_repo_path }}'
+
+- name: Make elasticsearch link path
+  file: >-
+    path={{ elasticsearch_link_path }}
+    state=directory
+    owner={{ deploy_user }}
+    group={{ deploy_user }}
+    mode=0755
+#  when: elasticsearch_link_path
+
+- name: Generate elasticsearch config
+  template: >-
+    src=elasticsearch.yml.j2
+    dest={{ elasticsearch_path }}/config/elasticsearch.yml
+    owner=root
+    group=root
+    mode=0644
+
+- include: optimize.yml
+  when: inventory_hostname == elasticsearch_task_server
+
+- name: Generate elasticsearch init script
+  template: >-
+    src=elasticsearch.init.j2
+    dest=/etc/init.d/elasticsearch
+    owner=root
+    group=root
+    mode=0755
+
+- name: Ensure elasticsearch started
+  service: >-
+    name=elasticsearch
+    state=started
+    enabled=yes
+

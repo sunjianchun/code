@@ -1,0 +1,40 @@
+---
+elasticsearch_ver: 2.3.2
+elasticsearch_url_path: sources/elasticsearch-{{ elasticsearch_ver }}.tar.gz
+elasticsearch_prefix: /usr/local
+elasticsearch_path: '{{ elasticsearch_prefix }}/elasticsearch-{{ elasticsearch_ver }}'
+elasticsearch_cluster: elasticsearch
+elasticsearch_node: '{{ inventory_hostname }}'
+elasticsearch_master_node: yes
+elasticsearch_data_node: yes
+elasticsearch_index_shards: 5
+elasticsearch_index_replicas: 1
+elasticsearch_data_path: /var/lib/elasticsearch
+elasticsearch_log_path: '{{ log_root }}/elasticsearch'
+elasticsearch_plugins_path: '{{ elasticsearch_path }}/plugins'
+elasticsearch_scripts_path: '{{ elasticsearch_path }}/scripts'
+elasticsearch_index_refresh_interval: 5s
+elasticsearch_bind_host: 0.0.0.0
+elasticsearch_publish_host: 0.0.0.0
+elasticsearch_zen_min_master_nodes: 2
+elasticsearch_discovery_zen_ping_multicast_enabled: no
+elasticsearch_discovery_zen_ping_unicast_hosts: []
+elasticsearch_repo_path: []
+elasticsearch_py_dependices:
+  - name: pycrypto
+    version: 2.6.1
+  - name: paramiko
+    version: 1.13.0
+lang_py_venv_path: '{{ elasticsearch_path }}/venv'
+elasticsearch_task_server: ''
+elasticsearch_link_path: ''
+elasticsearch_vip: http://192.168.1.10:9200
+elasticsearch_write_alias: w_alias
+elasticsearch_read_alias: r_alias
+elasticsearch_cron_jobs:
+  - minute: 01
+    hour: 2
+    day: 1
+    month: '*'
+    weekday: '*'
+    cmd: 'source {{ lang_py_venv_path }}/bin/activate && python {{ elasticsearch_path }}/{{ elasticsearch_cluster }}_optimize.py'

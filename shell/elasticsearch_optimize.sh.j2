@@ -1,0 +1,93 @@
+#!/bin/bash
+
+ES_VIP="{{ elasticsearch_vip }}"
+write_alias="{{ elasticsearch_write_alias }}"
+read_alias="{{ elasticsearch_read_alias }}"
+
+http_api() {
+    url=$1
+    method=$2
+    data=$3
+    [ -z "$data" ] && RETVAL=`curl -i -X$method $url |sed -n '1p' |awk '{print $2}'` || RETVAL=`curl -i -X$method $url -d "$data" |sed -n '1p' |awk '{print $2}'`
+
+    [ $RETVAL -eq 200 ] && return 0 || return 1
+}
+
+get_index() {
+    month=`echo $1 |awk -F"_" '{print $1}'`
+    [ "$month" == "current" ] && month=0
+    pre_month=$[$month-1]
+    time=`date -d "$month month ago" +%Y%m`
+    pre_time=`date -d "$pre_month month ago" +%Y%m`
+
+    index="logs${time}"
+    pre_index="logs${pre_time}"
+    http_api "$ES_VIP/$index" "GET"
+    RETVAL1=$?
+    http_api "$ES_VIP/$pre_index" "GET"
+    RETVAL2=$?
+
+    [ $month -eq 1 ] && [ $RETVAL1 -ne 0 ] && index="logs"
+
+    if [ $month -eq {{ elasticsearch_keep_index_num }} ]
+       then if [ $RETVAL1 -ne 0 ]
+                then [ $RETVAL2 -eq 0 ] && index="logs" || index=""
+            fi
+    fi
+
+    echo $index
+ 
+}
+
+create_index() {
+    index=$1
+    http_api "$ES_VIP/$index" "PUT"
+
+    RETVAL=$?    
+    [ $RETVAL -eq 0 ] && return 0 || exit 1
+}
+
+delete_index() {
+    index=$1
+    [ -z "$index" ] && return 0
+    http_api "$ES_VIP/$index" "DELETE"
+
+    RETVAL=$?    
+    [ $RETVAL -eq 0 ] && return 0 || exit 1
+}
+
+operate_alias() {
+   alias=$1
+   add_index=$2
+   remove_index=$3
+
+
+   http_api "$ES_VIP/_alias/$alias" "GET"
+   RETVAL=$?
+
+
+   if [ $RETVAL -ne 0 ]
+       then if [ "$alias" == "$write_alias" ]
+                then data="{\"actions\": [{ \"add\": { \"index\": \"$add_index\", \"alias\": \"$alias\" } }]}"
+            else
+                data="{\"actions\": [{ \"add\": { \"index\": \"`get_index 1_month_ago`\", \"alias\": \"$alias\" } },{ \"add\": { \"index\": \"$add_index\", \"alias\": \"$alias\" } }]}"
+            fi
+   else 
+       if [ -z "$remove_index" ]
+           then data="{\"actions\": [{ \"add\": { \"index\": \"$add_index\", \"alias\": \"$alias\" } }]}"
+       else
+           data="{\"actions\": [{ \"remove\": { \"index\": \"$remove_index\", \"alias\": \"$alias\" } },{ \"add\": { \"index\": \"$add_index\", \"alias\": \"$alias\" } }]}"
+       fi
+   fi
+ 
+   http_api "$ES_VIP/_aliases" "POST" "$data"
+   RETVAL1=$?  
+   [ $RETVAL1 -eq 0 ] && return 0 || exit 1
+       
+}
+
+create_index `get_index "current_month"`
+operate_alias $write_alias `get_index current_month` `get_index "1_month_ago"`
+operate_alias $read_alias `get_index current_month` `get_index "{{ elasticsearch_keep_index_num }}_month_ago"`
+delete_index `get_index "{{ elasticsearch_keep_index_num }}_month_ago"` 
+

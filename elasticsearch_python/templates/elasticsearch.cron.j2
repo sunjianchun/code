@@ -1,0 +1,7 @@
+PATH={{ common_env_paths }}
+USER={{ deploy_user }}
+APP_ENV={{ runtime_env }}
+
+{% for job in elasticsearch_cron_jobs %}
+{{ job.minute|default('*') }} {{ job.hour|default('*') }} {{ job.day|default('*') }} {{ job.month|default('*') }} {{ job.weekday|default('*') }} {{ deploy_user }} /usr/bin/flock -n /tmp/{{ elasticsearch_cluster }}.{{ loop.index}}.lockfile {{ job.cmd}} > /dev/null 2>&1
+{% endfor %}

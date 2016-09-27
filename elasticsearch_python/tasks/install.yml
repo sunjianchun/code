@@ -1,0 +1,13 @@
+---
+- name: Download elasticsearch
+  get_url: >-
+    url={{ res_local_host }}/{{ elasticsearch_url_path }}
+    dest=/tmp/elasticsearch{{ elasticsearch_ver }}.tar.gz
+    sha256sum=04c4d3913d496d217e038da88df939108369ae2e78eea29cb1adf1c4ab3a000a
+
+- name: Install elasticsearch
+  unarchive: >-
+    src=/tmp/elasticsearch{{ elasticsearch_ver }}.tar.gz
+    dest={{ elasticsearch_prefix }}
+    copy=no
+    creates={{ elasticsearch_prefix }}/elasticsearch

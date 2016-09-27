@@ -1,0 +1,8 @@
+---
+- stat: path={{elasticsearch_path}}/bin/elasticsearch
+  register: elasticsearch_bin
+
+- include: install.yml
+  when: not elasticsearch_bin.stat.exists
+
+- include: configure.yml

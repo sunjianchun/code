@@ -1,0 +1,31 @@
+---
+- name: Install elasticsearch py dependices
+  pip: >-
+    name={{ item.name }}
+    version={{ item.version }}
+    state=present
+    extra_args={{ lang_py_pip_extra_args }}
+    virtualenv={{ lang_py_venv_path }}
+    virtualenv_command={{ lang_py_prefix }}/bin/virtualenv
+  with_items: '{{ elasticsearch_py_dependices }}' 
+    
+- name: Gengrate elasticsearch optimize script
+  template: >-
+    src=elasticsearch_optimize.py.j2
+    dest={{ elasticsearch_path }}/{{ elasticsearch_cluster }}_optimize.py
+    owner={{ deploy_user }}
+    group={{ deploy_user }}
+    mode=0755
+
+- name: Generate elasticsearch cron job
+  template: >-
+    src=elasticsearch.cron.j2
+    dest={{ cron_service_conf_dir }}/{{ elasticsearch_cluster }}
+    owner={{ deploy_user }}
+    group={{ deploy_user }}
+    mode=0644
+  no_log: yes
+  changed_when: yes
+  notify: 
+    - reload crond
+...
