@@ -21,7 +21,7 @@ elasticsearch_discovery_zen_ping_multicast_enabled: no
 elasticsearch_discovery_zen_ping_unicast_hosts: []
 elasticsearch_repo_path: []
 elasticsearch_task_server: ''
-elasticsearch_vip: http://10.110.120.247:9200
+elasticsearch_vip: http://ip:9200
 elasticsearch_write_alias: write_logs
 elasticsearch_read_alias: read_logs
 elasticsearch_keep_index_num: 3
