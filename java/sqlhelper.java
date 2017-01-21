@@ -11,13 +11,13 @@ import java.util.Properties;
 import java.sql.*;
 public class SqlHelper
 {
-    //¶¨Òå±äÁ¿
+    //å®šä¹‰å˜é‡
     private static Connection ct = null;
-    //´ó¶àÊıÇé¿öÏÂÓÃpreparedstatementÌæ´ústatement
+    //å¤§å¤šæ•°æƒ…å†µä¸‹ç”¨preparedstatementæ›¿ä»£statement
     private static PreparedStatement ps = null;
     private static ResultSet rs = null;
    
-    //Á¬½ÓÊı¾İ¿âµÄ²ÎÊı
+    //è¿æ¥æ•°æ®åº“çš„å‚æ•°
     private static String url = "";
     private static String username = "";
     private static String driver = "";
@@ -30,12 +30,12 @@ public class SqlHelper
     }
     private static Properties  pp = null;
     private static InputStream fis = null;
-    //¼ÓÔØÇı¶¯£¬Ö»ĞèÒªÒ»´Î£¬ÓÃ¾²Ì¬´úÂë¿é
+    //åŠ è½½é©±åŠ¨ï¼Œåªéœ€è¦ä¸€æ¬¡ï¼Œç”¨é™æ€ä»£ç å—
     static
     {
         try
         {
-            //´Ódbinfo.properties
+            //ä»dbinfo.properties
             pp = new Properties();
             fis=SqlHelper.class.getClassLoader().getResourceAsStream("mysql.properties");
             //fis = new FileInputStream();
@@ -56,11 +56,11 @@ public class SqlHelper
             try
             { fis.close();}
             catch(IOException e) {e.printStackTrace();}
-            fis = null;//À¬»ø»ØÊÕÕ¾ÉÏÊÕÊ°
+            fis = null;//åƒåœ¾å›æ”¶ç«™ä¸Šæ”¶æ‹¾
         }
        
     }
-    //µÃµ½Á¬½Ó
+    //å¾—åˆ°è¿æ¥
     public static Connection getConnection()
         {
             try
@@ -70,7 +70,7 @@ public class SqlHelper
         }
    
    
-//*************callPro1´æ´¢¹ı³Ìº¯Êı1*************   
+//*************callPro1å­˜å‚¨è¿‡ç¨‹å‡½æ•°1*************   
     public static CallableStatement callPro1(String sql,String[] parameters)
     {
         try{
@@ -89,7 +89,7 @@ public class SqlHelper
         return cs;
     }
    
-//*******************callpro2´æ´¢¹ı³Ì2************************
+//*******************callpro2å­˜å‚¨è¿‡ç¨‹2************************
 public static CallableStatement callPro2(String sql,String[] inparameters,
 Integer[] outparameters)
 {
@@ -210,9 +210,9 @@ Integer[] outparameters)
        
     }
    
-    //ÏÈĞ´Ò»¸öupdate¡¢delete¡¢insert
-    //sql¸ñÊ½£ºupdate ±íÃû set ×Ö¶ÎÃû =£¿where ×Ö¶Î=£¿
-    //parameterÉñÓ¦¸ÃÊÇ£¨¡±abc¡°,23£©
+    //å…ˆå†™ä¸€ä¸ªupdateã€deleteã€insert
+    //sqlæ ¼å¼ï¼šupdate è¡¨å set å­—æ®µå =ï¼Ÿwhere å­—æ®µ=ï¼Ÿ
+    //parameterç¥åº”è¯¥æ˜¯ï¼ˆâ€abcâ€œ,23ï¼‰
     public static void executeUpdate(String sql,String[] parameters)
     {
         try
@@ -231,9 +231,9 @@ Integer[] outparameters)
         }
         catch(Exception e)
         {
-            e.printStackTrace();//¿ª·¢½×¶Î
-            //Å×³öÒì³£
-            //¿ÉÒÔ´¦Àí£¬Ò²¿ÉÒÔ²»´¦Àí
+            e.printStackTrace();//å¼€å‘é˜¶æ®µ
+            //æŠ›å‡ºå¼‚å¸¸
+            //å¯ä»¥å¤„ç†ï¼Œä¹Ÿå¯ä»¥ä¸å¤„ç†
             throw new RuntimeException(e.getMessage());
         }
         finally
@@ -244,7 +244,7 @@ Integer[] outparameters)
    
     public static void close(ResultSet rs,Statement ps,Connection ct)
     {
-        //¹Ø±Õ×ÊÔ´(ÏÈ¿ªºó¹Ø)
+        //å…³é—­èµ„æº(å…ˆå¼€åå…³)
         if(rs!=null)
         {
             try
