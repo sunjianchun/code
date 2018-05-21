@@ -14,3 +14,12 @@ def my_login(request):
                         return HttpResponse('login ok')
                 else:
                         return HttpResponse('login error')
+
+#2: 获得文件内容的md5               
+def md5_file(fname):
+    hash_md5 = hashlib.md5()
+
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+        return hash_md5.hexdigest()
