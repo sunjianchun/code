@@ -32,7 +32,7 @@ do_register_upstream(){
 #        curl "http://${MAIN_NGINX}:10001/gen_upstream/${S_NAME}"
 #        curl "http://${MAIN_NGINX}:10001/gen_upstream/${S_NAME}"
         IFS=$IFS_ORIG
-        for nginx in `cat ${ListFile} | grep "^nginx.souyidai.com" | sed -e 's,[	 ]\+,%,g' | awk -F '%' '{print $4}' `; do
+        for nginx in `cat ${ListFile} | grep "^nginx.s.com" | sed -e 's,[	 ]\+,%,g' | awk -F '%' '{print $4}' `; do
             IFS_TEMP=$IFS; IFS="%";
             log_info "http://${nginx}:10001/gen_upstream/${S_NAME}"
             /usr/bin/curl -s --connect-timeout 2 "http://${nginx}:10001/gen_upstream/${S_NAME}"
