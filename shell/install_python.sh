@@ -66,7 +66,7 @@ function install_python() {
             cd ${_RETURNVAL}
             ./configure --prefix=/usr/local/python${_VERSION} --enable-shared --with-ensurepip --enable-loadable-sqlite-extensions
             make && make install
-            echo /usr/local/python${_VERSION}/lib > /etc/ld.so.conf.d/python-${_VERSION}.conf && ldconfig
+            echo /usr/local/python{_VERSION}/lib > /etc/ld.so.conf.d/python-{_VERSION}.conf && ldconfig
         fi
     fi
 }  
@@ -89,6 +89,14 @@ function install_setuptools() {
 }
 
 
+function install_readline() {
+    _PKG=$1
+    yum groupinstall Development tools -y
+    yum install ncurses-libs ncurses-devel -y
+    /usr/local/python${_VERSION}/bin/pip${_VERSION} install ${_PKG} -i http://pypi.doubanio.com/simple/ --trusted-host pypi.doubanio.com
+}
+
+
 #RGV=("$@")
 #_VERSION=${ARGV[0]}
 _VERSION=$1
@@ -100,3 +108,4 @@ unpack_pkg ${_PY_3_RENAME}
 unpack_pkg ${_SETUPTOOLS_3_RENAME}
 install_python
 install_setuptools
+install_readline "readline"
