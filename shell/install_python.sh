@@ -66,7 +66,7 @@ function install_python() {
             cd ${_RETURNVAL}
             ./configure --prefix=/usr/local/python${_VERSION} --enable-shared --with-ensurepip --enable-loadable-sqlite-extensions
             make && make install
-            echo /usr/local/python3.6/lib > /etc/ld.so.conf.d/python-3.6.conf && ldconfig
+            echo /usr/local/python${_VERSION}/lib > /etc/ld.so.conf.d/python-${_VERSION}.conf && ldconfig
         fi
     fi
 }  
