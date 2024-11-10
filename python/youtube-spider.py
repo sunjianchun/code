@@ -2,6 +2,8 @@
 #!/usr/bin/python
 # 仓库地址https://github.com/ytdl-org/youtube-dl
 # 可以用这种方式下载最新版 python3.9 -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
+# yt-dlp -f <format> <URL> # 下载指定格式的文件
+# yt-dlp -F <URL> # 获取文件的所有格式
 import argparse
 import json, time
 from subprocess import Popen, PIPE
